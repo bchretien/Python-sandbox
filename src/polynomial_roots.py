@@ -6,7 +6,7 @@ import numpy as np
 import math
 import sys
 
-def cubic_roots(poly):
+def cubic_roots(poly, return_conjugate_realpart = False):
   """
       See: https://www.e-education.psu.edu/png520/m11_p6.html
   """
@@ -32,6 +32,12 @@ def cubic_roots(poly):
     if abs(S) > epsilon:
       U = Q/S
     roots.append(S + U - a/3.0)
+
+    # Also return the real part of the complex conjugate roots
+    if return_conjugate_realpart:
+      roots.append(-0.5*(S + U) - a/3.0)
+      roots.append(-0.5*(S + U) - a/3.0)
+
   # 3 real roots
   elif Q*Q*Q > epsilon: #if M < -epsilon
     theta = math.acos(R/(math.sqrt(Q*Q*Q)))
@@ -46,7 +52,7 @@ def cubic_roots(poly):
 
   return roots
 
-def quartic_roots(poly):
+def quartic_roots(poly, return_conjugate_realpart = False):
   """
       See: http://mathworld.wolfram.com/QuarticEquation.html
   """
@@ -98,106 +104,168 @@ def quartic_roots(poly):
       # R = 0, D and E complex => 4 complex roots
       return roots
 
+    # 2 real roots
     if square_D >= 0:
       D = math.sqrt(square_D)
       roots.append(-0.25*a3 + 0.5*(R + D))
       roots.append(-0.25*a3 + 0.5*(R - D))
+    # 2 complex roots
+    elif return_conjugate_realpart:
+      roots.append(-0.25*a3 + 0.5*R)
+      roots.append(-0.25*a3 + 0.5*R)
 
+    # 2 real roots
     if square_E >= 0:
       E = math.sqrt(square_E)
       roots.append(-0.25*a3 - 0.5*(R - E))
       roots.append(-0.25*a3 - 0.5*(R + E))
+    # 2 complex roots
+    elif return_conjugate_realpart:
+      roots.append(-0.25*a3 - 0.5*R)
+      roots.append(-0.25*a3 - 0.5*R)
 
     return roots
 
-  else:
+  elif return_conjugate_realpart:
     # R complex => 4 complex roots
+    R = math.sqrt(-square_R)
+    A = 0.75*a3*a3 -square_R -2.0*a2
+    B = 0.25*(4.0*a3*a2 -8.0*a1 - a3*a3*a3)/R
+    # D^2 = A - iB
+    # E^2 = A + iB
+    # Compute the real parts of D and E (Real(D) = Real(E))
+    # See: http://en.wikipedia.org/wiki/Complex_number#Square_root
+    D = math.sqrt(0.5*(A + math.sqrt(A*A + B*B)))
+    roots.append(-0.25*a3 - 0.5*D)
+    roots.append(-0.25*a3 - 0.5*D)
+    roots.append(-0.25*a3 + 0.5*D)
+    roots.append(-0.25*a3 + 0.5*D)
     return roots
+
+  return roots
 
 
 j = complex(0,1)
 print('############################ CUBIC ###################################')
-# From roots
-roots = np.array([[1, 1, 1], [1, 2, 3], [1, 3, 3],
-                  [1, j, -j], [-5, 3*j, -3*j]]);
-for r in roots:
-  sorted_r = np.sort(r)
-  filtered_r = [_.real for _ in r if (not isinstance(_, complex))
-                                  or (np.abs(_.imag) < 1e-12)]
-  test_poly = np.poly(sorted_r)
-  np_roots = np.roots(test_poly)
-  np_roots = [_.real for _ in np_roots if (not isinstance(_, complex))
-                                       or (np.abs(_.imag) < 1e-12)]
-  np_roots_sorted = np.sort(np_roots)
-  print 'Numpy roots: ', np_roots_sorted
-  analytical_roots = cubic_roots(test_poly)
-  analytical_roots_sorted = np.sort(analytical_roots)
-  print 'Analytical roots: ', analytical_roots_sorted
-  assert(np.allclose(filtered_r, analytical_roots_sorted,
-                     rtol=1e-05, atol=1e-08))
+for compute_conjugate_realpart in (False,True):
+
+  if compute_conjugate_realpart:
+    print('###### Real roots + real part of complex conjugate roots ######')
+  else:
+    print('###### Real roots ######')
   print
 
-# from coeffs
-coeffs = np.array([[1, 1, 1, 1], [1, 2, 3, 4], [1, 3, 3, 4], [1, 0, 0, 0],
-                   [1, 0, 0, 1], [1, -6, 11, -6], [1, 7, 49, 343],
-                   [1.0, -3, -12.0, 24.0], [1.0, -11.0, 32.0, -28.0],
-                   [1.0, 5.0, -16.0, -80.0]]);
-for c in coeffs:
-  test_poly = np.poly1d(c)
-  np_roots = np.roots(test_poly.coeffs)
-  np_roots = [_ for _ in np_roots if (not isinstance(_, complex))
-                                  or (np.abs(_.imag) < 1e-12)]
-  np_roots_sorted = np.sort(np_roots)
-  print 'Numpy roots: ', np_roots_sorted
-  analytical_roots = cubic_roots(test_poly.coeffs)
-  analytical_roots_sorted = np.sort(analytical_roots)
-  print 'Analytical roots: ', analytical_roots_sorted
-  assert(np.allclose(np_roots_sorted, analytical_roots_sorted,
-                     rtol=1e-05, atol=1e-08))
-  print
+  # From roots
+  roots = np.array([[1, 1, 1], [1, 2, 3], [1, 3, 3],
+                    [1, j, -j], [-5, 3*j, -3*j]]);
+  for r in roots:
+    sorted_r = np.sort(r)
+    if not compute_conjugate_realpart:
+      filtered_r = [_.real for _ in sorted_r if (not isinstance(_, complex))
+                                      or (np.abs(_.imag) < 1e-12)]
+    else:
+      filtered_r = [_.real for _ in sorted_r]
+
+    test_poly = np.poly(sorted_r)
+    np_roots = np.roots(test_poly)
+    if compute_conjugate_realpart:
+      np_roots = [_.real for _ in np_roots]
+    else:
+      np_roots = [_.real for _ in np_roots if (not isinstance(_, complex))
+                                           or (np.abs(_.imag) < 1e-6)]
+
+    np_roots_sorted = np.sort(np_roots)
+    print 'Actual roots: ', sorted_r
+    print 'Numpy roots: ', np_roots_sorted
+    analytical_roots = cubic_roots(test_poly, compute_conjugate_realpart)
+    analytical_roots_sorted = np.sort(analytical_roots)
+    print 'Analytical roots: ', analytical_roots_sorted
+    assert(np.allclose(filtered_r, analytical_roots_sorted))
+    print
+
+  # from coeffs
+  coeffs = np.array([[1, 1, 1, 1], [1, 2, 3, 4], [1, 3, 3, 4], [1, 0, 0, 0],
+                     [1, 0, 0, 1], [1, -6, 11, -6], [1, 7, 49, 343],
+                     [1.0, -3, -12.0, 24.0], [1.0, -11.0, 32.0, -28.0],
+                     [1.0, 5.0, -16.0, -80.0]]);
+  for c in coeffs:
+    test_poly = np.poly1d(c)
+    print test_poly
+    np_roots = np.roots(test_poly.coeffs)
+    if compute_conjugate_realpart:
+      np_roots = [_.real for _ in np_roots]
+    else:
+      np_roots = [_.real for _ in np_roots if (not isinstance(_, complex))
+                                           or (np.abs(_.imag) < 1e-6)]
+    np_roots_sorted = np.sort(np_roots)
+    print 'Numpy roots: ', np_roots_sorted
+    analytical_roots = cubic_roots(test_poly.coeffs, compute_conjugate_realpart)
+    analytical_roots_sorted = np.sort(analytical_roots)
+    print 'Analytical roots: ', analytical_roots_sorted
+    assert(np.allclose(np_roots_sorted, analytical_roots_sorted,
+                       rtol=1e-05, atol=1e-08))
+    print
 
 print('########################### QUARTIC ##################################')
-# From roots
-roots = np.array([[-2,-1,1,2], [1, 1, 1, 1], [1, 2, 3, 4], [1, 3, 3, 2],
-                  [1, j, -j, -1], [-5*j, 5*j, -3*j, 3*j]]);
-for r in roots:
-  sorted_r = np.sort(r)
-  filtered_r = [_.real for _ in r if (not isinstance(_, complex))
-                                  or (np.abs(_.imag) < 1e-6)]
-  filtered_r = np.sort(filtered_r)
-  test_poly = np.poly(sorted_r)
-  test_poly = test_poly.real
-  print test_poly
-  np_roots = np.roots(test_poly)
-  np_roots = [_.real for _ in np_roots if (not isinstance(_, complex))
-                                       or (np.abs(_.imag) < 1e-6)]
-  np_roots_sorted = np.sort(np_roots)
-  print 'Actual roots: ', filtered_r
-  print 'Numpy roots: ', np_roots_sorted
-  analytical_roots = quartic_roots(test_poly)
-  analytical_roots_sorted = np.sort(analytical_roots)
-  print 'Analytical roots: ', analytical_roots_sorted
-  assert(np.allclose(filtered_r, analytical_roots_sorted,
-                     rtol=1e-05, atol=1e-08))
+for compute_conjugate_realpart in (False,True):
+
+  if compute_conjugate_realpart:
+    print('###### Real roots + real part of complex conjugate roots ######')
+  else:
+    print('###### Real roots ######')
   print
 
-# from coeffs
-coeffs = np.array([[1, 0, 2, 0, 1], [1, -3, 3, -3, 2], [1, 0, -5, 0, 4],
-                   [1, 1, 1, 1, 1], [1, 2, 3, 4, 5],
-                   [1, 3, 3, 4, 4], [1, 0, 0, 0, 0], [1, 0, 0, 0, 1],
-                   [1, -6, 11, -6, 1], [1, 7, 49, 343, 1],
-                   [1.0, -3.0, -12.0, 24.0, 1.0]]);
-for c in coeffs:
-  test_poly = np.poly1d(c)
-  print test_poly
-  np_roots = np.roots(test_poly.coeffs)
-  np_roots = [_.real for _ in np_roots if (not isinstance(_, complex))
-                                       or (np.abs(_.imag) < 1e-6)]
-  np_roots_sorted = np.sort(np_roots)
-  print 'Numpy roots: ', np_roots_sorted
-  analytical_roots = quartic_roots(test_poly.coeffs)
-  analytical_roots_sorted = np.sort(analytical_roots)
-  print 'Analytical roots: ', analytical_roots_sorted
-  assert(np.allclose(np_roots_sorted, analytical_roots_sorted,
-                     rtol=1e-05, atol=1e-08))
-  print
+  # From roots
+  roots = np.array([[-2,-1,1,2], [1, 1, 1, 1], [1, 2, 3, 4], [1, 3, 3, 2],
+                    [1, j, -j, -1], [-5*j, 5*j, -3*j, 3*j]]);
+  for r in roots:
+    sorted_r = np.sort(r)
+    if not compute_conjugate_realpart:
+      filtered_r = [_.real for _ in sorted_r if (not isinstance(_, complex))
+                                      or (np.abs(_.imag) < 1e-12)]
+    else:
+      filtered_r = [_.real for _ in sorted_r]
+
+    #filtered_r = np.sort(filtered_r)
+    test_poly = np.poly(sorted_r)
+    test_poly = test_poly.real
+    print test_poly
+    np_roots = np.roots(test_poly)
+    if compute_conjugate_realpart:
+      np_roots = [_.real for _ in np_roots]
+    else:
+      np_roots = [_.real for _ in np_roots if (not isinstance(_, complex))
+                                           or (np.abs(_.imag) < 1e-6)]
+    np_roots_sorted = np.sort(np_roots)
+    print 'Actual roots: ', filtered_r
+    print 'Numpy roots: ', np_roots_sorted
+    analytical_roots = quartic_roots(test_poly, compute_conjugate_realpart)
+    analytical_roots_sorted = np.sort(analytical_roots)
+    print 'Analytical roots: ', analytical_roots_sorted
+    assert(np.allclose(filtered_r, analytical_roots_sorted,
+                       rtol=1e-05, atol=1e-08))
+    print
+
+  # from coeffs
+  coeffs = np.array([[1, 0, 2, 0, 1], [1, -3, 3, -3, 2], [1, 0, -5, 0, 4],
+                     [1, 1, 1, 1, 1], [1, 2, 3, 4, 5],
+                     [1, 3, 3, 4, 4], [1, 0, 0, 0, 0], [1, 0, 0, 0, 1],
+                     [1, -6, 11, -6, 1], [1, 7, 49, 343, 1],
+                     [1.0, -3.0, -12.0, 24.0, 1.0]]);
+  for c in coeffs:
+    test_poly = np.poly1d(c)
+    print test_poly
+    np_roots = np.roots(test_poly.coeffs)
+    if compute_conjugate_realpart:
+      np_roots = [_.real for _ in np_roots]
+    else:
+      np_roots = [_.real for _ in np_roots if (not isinstance(_, complex))
+                                           or (np.abs(_.imag) < 1e-6)]
+    np_roots_sorted = np.sort(np_roots)
+    print 'Numpy roots: ', np_roots_sorted
+    analytical_roots = quartic_roots(test_poly.coeffs, compute_conjugate_realpart)
+    analytical_roots_sorted = np.sort(analytical_roots)
+    print 'Analytical roots: ', analytical_roots_sorted
+    assert(np.allclose(np_roots_sorted, analytical_roots_sorted,
+                       rtol=1e-05, atol=1e-08))
+    print

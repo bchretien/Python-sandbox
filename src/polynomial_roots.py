@@ -80,62 +80,73 @@ def quartic_roots(poly, return_conjugate_realpart = False):
   y1 = resolvent_roots[0]
   square_R = 0.25*a3*a3 - a2 + y1
 
-  if square_R < 100*epsilon:
+  if square_R < 10*epsilon:
     for r in resolvent_roots[1:]:
       y1 = r
       square_R = 0.25*a3*a3 - a2 + y1
       if square_R >= epsilon:
         break
 
-
   roots = []
+  R = 0
 
-  if square_R >= 0:
+  # R >= 0
+  if square_R >= -epsilon:
     square_D = 0
     square_E = 0
-    R = math.sqrt(square_R)
-    if abs(R) > epsilon:
+
+    # R > 0
+    if abs(square_R) > epsilon:
+      R = math.sqrt(abs(square_R))
       square_D = 0.75*a3*a3 -square_R -2.0*a2 + 0.25*(4.0*a3*a2 -8.0*a1 - a3*a3*a3)/R
       square_E = 0.75*a3*a3 -square_R -2.0*a2 - 0.25*(4.0*a3*a2 -8.0*a1 - a3*a3*a3)/R
+    # R = 0, D^2 and E^2 real
     elif y1*y1 -4.0*a0 >= 0:
       square_D = 0.75*a3*a3 -2.0*a2 + 2.0*math.sqrt(y1*y1 -4.0*a0)
       square_E = 0.75*a3*a3 -2.0*a2 - 2.0*math.sqrt(y1*y1 -4.0*a0)
-    else:
-      # R = 0, D and E complex => 4 complex roots
+    # R = 0, D^2 and E^2 complex => 4 complex conjugate roots
+    elif return_conjugate_realpart:
+      roots.append(-0.25*a3)
+      roots.append(-0.25*a3)
+      roots.append(-0.25*a3)
+      roots.append(-0.25*a3)
       return roots
 
-    # 2 real roots
+    # D^2 >= 0: 2 real roots
     if square_D >= 0:
       D = math.sqrt(square_D)
       roots.append(-0.25*a3 + 0.5*(R + D))
       roots.append(-0.25*a3 + 0.5*(R - D))
-    # 2 complex roots
+    #  D^2 < 0: 2 complex conjugate roots
     elif return_conjugate_realpart:
       roots.append(-0.25*a3 + 0.5*R)
       roots.append(-0.25*a3 + 0.5*R)
 
-    # 2 real roots
+    # E^2 >= 0: 2 real roots
     if square_E >= 0:
       E = math.sqrt(square_E)
       roots.append(-0.25*a3 - 0.5*(R - E))
       roots.append(-0.25*a3 - 0.5*(R + E))
-    # 2 complex roots
+    #  E^2 < 0: 2 complex conjugate roots
     elif return_conjugate_realpart:
       roots.append(-0.25*a3 - 0.5*R)
       roots.append(-0.25*a3 - 0.5*R)
 
     return roots
 
+  # R < 0: 4 complex conjugate roots
   elif return_conjugate_realpart:
-    # R complex => 4 complex roots
     R = math.sqrt(-square_R)
-    A = 0.75*a3*a3 -square_R -2.0*a2
-    B = 0.25*(4.0*a3*a2 -8.0*a1 - a3*a3*a3)/R
+
     # D^2 = A - iB
     # E^2 = A + iB
+    A = 0.75*a3*a3 -square_R -2.0*a2
+    B = 0.25*(4.0*a3*a2 -8.0*a1 - a3*a3*a3)/R
+
     # Compute the real parts of D and E (Real(D) = Real(E))
     # See: http://en.wikipedia.org/wiki/Complex_number#Square_root
     D = math.sqrt(0.5*(A + math.sqrt(A*A + B*B)))
+
     roots.append(-0.25*a3 - 0.5*D)
     roots.append(-0.25*a3 - 0.5*D)
     roots.append(-0.25*a3 + 0.5*D)
@@ -143,7 +154,6 @@ def quartic_roots(poly, return_conjugate_realpart = False):
     return roots
 
   return roots
-
 
 j = complex(0,1)
 print('############################ CUBIC ###################################')

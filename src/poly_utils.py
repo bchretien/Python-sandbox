@@ -226,16 +226,18 @@ def sin_poly(P):
 ###############################################################################
 
 
-def test_root_computation():
+def test_root_computation(verbose=False):
   j = complex(0,1)
-  print('############################ CUBIC ###################################')
+  if verbose:
+    print('############################ CUBIC ###################################')
   for compute_conjugate_realpart in (False,True):
 
-    if compute_conjugate_realpart:
-      print('###### Real roots + real part of complex conjugate roots ######')
-    else:
-      print('###### Real roots ######')
-    print
+    if verbose:
+      if compute_conjugate_realpart:
+        print('###### Real roots + real part of complex conjugate roots ######')
+      else:
+        print('###### Real roots ######')
+      print
 
     # From roots
     roots = np.array([[1, 1, 1], [1, 2, 3], [1, 3, 3],
@@ -257,13 +259,16 @@ def test_root_computation():
                                              or (np.abs(_.imag) < 1e-6)]
 
       np_roots_sorted = np.sort(np_roots)
-      print 'Actual roots: ', sorted_r
-      print 'Numpy roots: ', np_roots_sorted
       analytical_roots = cubic_roots(test_poly, compute_conjugate_realpart)
       analytical_roots_sorted = np.sort(analytical_roots)
-      print 'Analytical roots: ', analytical_roots_sorted
+
+      if verbose:
+        print 'Actual roots: ', sorted_r
+        print 'Numpy roots: ', np_roots_sorted
+        print 'Analytical roots: ', analytical_roots_sorted
+        print
+
       assert(np.allclose(filtered_r, analytical_roots_sorted))
-      print
 
     # from coeffs
     coeffs = np.array([[1, 1, 1, 1], [1, 2, 3, 4], [1, 3, 3, 4], [1, 0, 0, 0],
@@ -272,7 +277,6 @@ def test_root_computation():
                        [1.0, 5.0, -16.0, -80.0], [1, 0, -3, 2]]);
     for c in coeffs:
       test_poly = np.poly1d(c)
-      print test_poly
       np_roots = np.roots(test_poly.coeffs)
       if compute_conjugate_realpart:
         np_roots = [_.real for _ in np_roots]
@@ -280,22 +284,29 @@ def test_root_computation():
         np_roots = [_.real for _ in np_roots if (not isinstance(_, complex))
                                              or (np.abs(_.imag) < 1e-6)]
       np_roots_sorted = np.sort(np_roots)
-      print 'Numpy roots: ', np_roots_sorted
       analytical_roots = cubic_roots(test_poly.coeffs, compute_conjugate_realpart)
       analytical_roots_sorted = np.sort(analytical_roots)
-      print 'Analytical roots: ', analytical_roots_sorted
+
+      if verbose:
+        print test_poly
+        print 'Numpy roots: ', np_roots_sorted
+        print 'Analytical roots: ', analytical_roots_sorted
+        print
+
       assert(np.allclose(np_roots_sorted, analytical_roots_sorted,
                          rtol=1e-05, atol=1e-08))
-      print
 
-  print('########################### QUARTIC ##################################')
+  if verbose:
+    print('########################### QUARTIC ##################################')
+
   for compute_conjugate_realpart in (False,True):
 
-    if compute_conjugate_realpart:
-      print('###### Real roots + real part of complex conjugate roots ######')
-    else:
-      print('###### Real roots ######')
-    print
+    if verbose:
+      if compute_conjugate_realpart:
+        print('###### Real roots + real part of complex conjugate roots ######')
+      else:
+        print('###### Real roots ######')
+      print
 
     # From roots
     roots = np.array([[-2,-1,1,2], [1, 1, 1, 1], [1, 2, 3, 4], [1, 3, 3, 2],
@@ -308,10 +319,8 @@ def test_root_computation():
       else:
         filtered_r = [_.real for _ in sorted_r]
 
-      #filtered_r = np.sort(filtered_r)
       test_poly = np.poly(sorted_r)
       test_poly = test_poly.real
-      print test_poly
       np_roots = np.roots(test_poly)
       if compute_conjugate_realpart:
         np_roots = [_.real for _ in np_roots]
@@ -319,14 +328,18 @@ def test_root_computation():
         np_roots = [_.real for _ in np_roots if (not isinstance(_, complex))
                                              or (np.abs(_.imag) < 1e-6)]
       np_roots_sorted = np.sort(np_roots)
-      print 'Actual roots: ', filtered_r
-      print 'Numpy roots: ', np_roots_sorted
       analytical_roots = quartic_roots(test_poly, compute_conjugate_realpart)
       analytical_roots_sorted = np.sort(analytical_roots)
-      print 'Analytical roots: ', analytical_roots_sorted
+
+      if verbose:
+        print test_poly
+        print 'Actual roots: ', filtered_r
+        print 'Numpy roots: ', np_roots_sorted
+        print 'Analytical roots: ', analytical_roots_sorted
+        print
+
       assert(np.allclose(filtered_r, analytical_roots_sorted,
                          rtol=1e-05, atol=1e-08))
-      print
 
     # from coeffs
     coeffs = np.array([[1, 0, 2, 0, 1], [1, -3, 3, -3, 2], [1, 0, -5, 0, 4],
@@ -336,7 +349,6 @@ def test_root_computation():
                        [1.0, -3.0, -12.0, 24.0, 1.0]]);
     for c in coeffs:
       test_poly = np.poly1d(c)
-      print test_poly
       np_roots = np.roots(test_poly.coeffs)
       if compute_conjugate_realpart:
         np_roots = [_.real for _ in np_roots]
@@ -344,15 +356,19 @@ def test_root_computation():
         np_roots = [_.real for _ in np_roots if (not isinstance(_, complex))
                                              or (np.abs(_.imag) < 1e-6)]
       np_roots_sorted = np.sort(np_roots)
-      print 'Numpy roots: ', np_roots_sorted
       analytical_roots = quartic_roots(test_poly.coeffs, compute_conjugate_realpart)
       analytical_roots_sorted = np.sort(analytical_roots)
-      print 'Analytical roots: ', analytical_roots_sorted
+
+      if verbose:
+        print test_poly
+        print 'Numpy roots: ', np_roots_sorted
+        print 'Analytical roots: ', analytical_roots_sorted
+        print
+
       assert(np.allclose(np_roots_sorted, analytical_roots_sorted,
                          rtol=1e-05, atol=1e-08))
-      print
 
-def test_cos_sin_polynomial():
+def test_cos_sin_polynomial(verbose=False):
   # Tested polynomials
   test_coeffs = [ [1,2,3,4,5], [1,1,1,-1,2]]
   for c in test_coeffs:
@@ -370,7 +386,14 @@ def test_cos_sin_polynomial():
     # Compute cos(P) with symbolic expressions
     exp = sp.cos(symP)
     cosp = sp.series(exp, x, n=len(c))
-    resSym = sp.collect(cosp.evalf(), x, evaluate=False, exact=False)
+    evalCos = cosp.evalf()
+    resSym = sp.collect(evalCos, x, evaluate=False, exact=False)
+
+    if verbose:
+      print 'P = '
+      print P
+      print 'cos(P) = ', res
+      print 'Symbolic cos(P) = ', evalCos
 
     # Compare the 2 results
     for i in xrange(len(c)):
@@ -392,7 +415,13 @@ def test_cos_sin_polynomial():
     # Compute sin(P) with symbolic expressions
     exp = sp.sin(symP)
     sinp = sp.series(exp, x, n=len(c))
-    resSym = sp.collect(sinp.evalf(), x, evaluate=False, exact=False)
+    evalSym = sinp.evalf()
+    resSym = sp.collect(evalSym, x, evaluate=False, exact=False)
+
+    if verbose:
+      print 'sin(P) = ', res
+      print 'Symbolic sin(P) = ', evalSym
+      print
 
     # Compare the 2 results
     for i in xrange(len(c)):
@@ -408,5 +437,5 @@ def test_cos_sin_polynomial():
       assert(abs(a-b) <= rel_tol*(abs(a)+abs(b)) + abs_tol)
 
 if __name__ == "__main__":
-  test_root_computation()
-  test_cos_sin_polynomial()
+  test_root_computation(verbose=False)
+  test_cos_sin_polynomial(verbose=False)

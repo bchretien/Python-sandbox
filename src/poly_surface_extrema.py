@@ -103,18 +103,30 @@ x = roots_evol[0,math.floor(len(Y)/2):-1,0].flatten(0)
 y = roots_evol[0,math.floor(len(Y)/2):-1,1].flatten(0)
 z = roots_evol[0,math.floor(len(Y)/2):-1,2].flatten(0)
 trajectory4 = mlab.plot3d(x[:], y[:], z[:],
-                           color=(0,1,0), tube_radius=None)
+                           color=(1,0,0), tube_radius=None)
 
 # Real root
 x = roots_evol[1,math.floor(len(Y)/2):-1,0].flatten(0)
 y = roots_evol[1,math.floor(len(Y)/2):-1,1].flatten(0)
 z = roots_evol[1,math.floor(len(Y)/2):-1,2].flatten(0)
 trajectory5 = mlab.plot3d(x[:], y[:], z[:],
-                           color=(1,0,0), tube_radius=None)
+                           color=(1,1,1), tube_radius=None)
+
+# Separation y = 0
+x = X
+y = [0 for _ in xrange(len(x))]
+z = Z_evol[:,len(Y)/2]
+trajectory6 = mlab.plot3d(x[:-2], y[:-2], z[:-2],
+                          color=(1,1,1), tube_radius=None,
+                          opacity=0.5)
 
 # Create the axes
 mlab.axes(s_poly, color=(.7, .7, .7),
           xlabel='x', ylabel='y < 0: Imag(conj_root)\ny > 0: +/- real root', zlabel='P(x)')
+
+
+# Activate antialiasing
+#fig.scene.render_window.aa_frames = 8
 
 # Show the result
 mlab.show()

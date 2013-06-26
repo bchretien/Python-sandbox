@@ -138,10 +138,12 @@ def compute_uniform_bspline_matrix( k ):
   return M
 
 
-def cubic_span_matrix():
+def cubic_sym_span_matrix():
   """
+  Compute a symbolic span matrix for B-Splines.
+
   Based on "A practical review of uniform b-splines" by Kristin Branson
-  Notation used: [1 s s^2 s^3] B [P0 P1 P2 P3]^T
+  Notation used: [1 s s^2 s^3] Bi Pi^T
   See: http://vision.ucsd.edu/~kbranson/research/bsplines.html
   """
 
@@ -151,7 +153,7 @@ def cubic_span_matrix():
   P = sp.MatrixSymbol('p', 4, 1)
 
   # Use the result given in the paper
-  # TODO: implement that part that leads to this result
+  # TODO: implement the part that leads to this result
   res = Fraction(1,6)*( (1-(s-i))**3 * P[0,0]
             + (3*(s-i)**3 - 6*(s-i)**2 + 4) * P[1,0]
             + (-3*(s-i)**3 + 3*(s-i)**2 + 3*(s-i) + 1) * P[2,0]
@@ -183,13 +185,69 @@ def cubic_span_matrix():
 
   return Bi
 
+
+def cubic_open_placement_matrix(n_cp):
+  """
+  Placement matrix G for an open B-spline with n_cp control points.
+
+  Based on "A practical review of uniform b-splines" by Kristin Branson
+  Notation used: [1 s s^2 s^3] B G P^T
+  See: http://vision.ucsd.edu/~kbranson/research/bsplines.html
+
+  n_cp: number of control points.
+  """
+
+  # G[m,n,i]
+  G = np.zeros((4, n_cp+3, n_cp+3))
+
+  for i in xrange(3,n_cp+3):
+    for m in xrange(0,4):
+      for n in xrange(i-3, i+1):
+        if i+m-3 == n:
+          G[m,n,i] = 1
+
+  return G
+
+
+def cubic_closed_placement_matrix(n_cp):
+  """
+  Placement matrix G for a closed B-spline with n_cp control points.
+
+  Based on "A practical review of uniform b-splines" by Kristin Branson
+  Notation used: [1 s s^2 s^3] B G P^T
+  See: http://vision.ucsd.edu/~kbranson/research/bsplines.html
+
+  n_cp: number of control points.
+  """
+
+  # Gi[m,n,i]
+  G = np.zeros((4, n_cp+3, n_cp+3))
+
+  for i in xrange(3,n_cp+3):
+    for m in xrange(0,4):
+      for n in xrange(i-3, i+1):
+        if (i+m-7)%(n_cp) == n-1:
+          G[m,n,i] = 1
+
+  return G
+
+
 def main ():
   # Print with the [1 t t^2 ...] M [P0 P1 P2 ...]^T notation
   print compute_uniform_bspline_matrix(3)
   print
   print compute_uniform_bspline_matrix(4)
   print
-  sp.pretty_print(cubic_span_matrix())
+  sp.pretty_print(cubic_sym_span_matrix())
+  print
+  nb_ctrlpts = 4
+  res = cubic_open_placement_matrix(nb_ctrlpts)
+  for i in xrange(nb_ctrlpts+3):
+    print res[:,:,i]
+  print
+  res = cubic_closed_placement_matrix(nb_ctrlpts)
+  for i in xrange(nb_ctrlpts+3):
+    print res[:,:,i]
 
 if __name__ == "__main__":
   main ()
